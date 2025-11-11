@@ -10,7 +10,7 @@ export interface Metric {
   title: string;
   value: string;
   change: string;
-  changeType: 'increase' | 'decrease';
+  changeType?: 'increase' | 'decrease'; // Make optional for new metric card
 }
 
 export interface Alert {
@@ -47,10 +47,12 @@ export interface Incident {
 
 export interface Vulnerability {
   id: string;
-  description: string;
+  cveId: string;
+  name: string;
   severity: Severity;
-  asset: string;
-  status: 'New' | 'Patching' | 'Resolved';
+  affectedAsset: string;
+  description: string;
+  publishedDate: string;
+  cveLink: string;
   remediation: string;
-  cveUrl: string;
 }
