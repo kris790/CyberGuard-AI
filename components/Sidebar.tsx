@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { ShieldCheckIcon, DashboardIcon, BugIcon, DesktopComputerIcon } from './IconComponents';
+import { ShieldCheckIcon, DashboardIcon, BugIcon, DesktopComputerIcon, UserCircleIcon } from './IconComponents';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../services/supabaseClient';
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -23,6 +25,11 @@ const NavItem: React.FC<NavItemProps> = ({ icon, label, active = false }) => (
 
 const Sidebar: React.FC = () => {
   const [activeItem] = useState('Dashboard');
+  const { session } = useAuth();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   const navItems = [
     { label: 'Dashboard', icon: <DashboardIcon /> },
@@ -47,11 +54,18 @@ const Sidebar: React.FC = () => {
         ))}
       </nav>
       <div className="p-4 border-t border-gray-200">
-          <div className="p-4 rounded-lg bg-gray-50 text-center">
-              <p className="text-sm text-gray-600">Upgrade to Pro for advanced features and unlimited protection.</p>
-              <button className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                  Upgrade Now
-              </button>
+          <div className="flex items-center">
+              <UserCircleIcon className="h-10 w-10 text-gray-400" />
+              <div className="ml-3 overflow-hidden">
+                  <p className="text-sm font-semibold text-gray-700 truncate" title={session?.user?.email}>{session?.user?.email}</p>
+                  <button 
+                    onClick={handleLogout} 
+                    className="text-xs text-blue-600 hover:underline focus:outline-none"
+                    aria-label="Logout"
+                  >
+                      Logout
+                  </button>
+              </div>
           </div>
       </div>
     </div>

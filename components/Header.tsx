@@ -1,5 +1,5 @@
 import React from 'react';
-import { BellIcon, UserCircleIcon } from './IconComponents';
+import { BellIcon } from './IconComponents';
 
 const Header: React.FC = () => {
   return (
@@ -23,13 +23,6 @@ const Header: React.FC = () => {
           <BellIcon />
           <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
         </button>
-        <div className="flex items-center">
-          <UserCircleIcon className="h-8 w-8 text-gray-500" />
-          <div className="ml-2">
-            <p className="text-sm font-medium text-gray-800">Admin</p>
-            <p className="text-xs text-gray-500">Security Analyst</p>
-          </div>
-        </div>
       </div>
     </header>
   );

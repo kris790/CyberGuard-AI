@@ -1,7 +1,8 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Alert } from '../types';
 import { AlertExplanation } from '../services/geminiService';
-import { SparklesIcon, InformationCircleIcon } from './IconComponents';
+import { SparklesIcon, InformationCircleIcon, ClipboardCopyIcon } from './IconComponents';
 
 interface AlertDetailsPanelProps {
   alert: Alert;
@@ -16,6 +17,36 @@ const DetailRow: React.FC<{ label: string; value?: string; children?: React.Reac
         <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{children || value}</dd>
     </div>
 );
+
+const CommandBlock: React.FC<{ title: string; command: string }> = ({ title, command }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(command);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+    };
+
+    return (
+        <div>
+            <h5 className="text-sm font-semibold text-gray-600 mb-1">{title}</h5>
+            <div className="flex items-center bg-gray-900 rounded-md p-2">
+                <code className="text-xs text-green-300 flex-1 overflow-x-auto whitespace-nowrap">{command}</code>
+                <button
+                    onClick={handleCopy}
+                    className="ml-4 p-1.5 bg-gray-700 hover:bg-gray-600 rounded-md text-gray-300 transition-colors"
+                    aria-label={`Copy ${title} command`}
+                >
+                    {copied ? (
+                        <span className="text-xs font-semibold">Copied!</span>
+                    ) : (
+                        <ClipboardCopyIcon className="h-4 w-4" />
+                    )}
+                </button>
+            </div>
+        </div>
+    );
+};
 
 const AlertDetailsPanel: React.FC<AlertDetailsPanelProps> = ({ alert, analysis, isLoading, error }) => {
     
@@ -45,9 +76,19 @@ const AlertDetailsPanel: React.FC<AlertDetailsPanelProps> = ({ alert, analysis, 
                 <span>Analyzing threat with Gemini...</span>
             </div>
         )}
-        {error && <p className="text-red-600 bg-red-50 p-3 rounded-md text-sm">{error}</p>}
+        {error && (
+          <div className="bg-red-50 border border-red-200 p-3 rounded-md text-sm">
+            <p className="font-semibold text-red-800">AI Analysis Failed</p>
+            <code className="mt-2 block text-red-700 text-xs font-mono">{error}</code>
+          </div>
+        )}
         {analysis && (
             <div className="space-y-4 animate-fade-in">
+                 <div>
+                    <p className="text-sm font-medium text-gray-700">Summary</p>
+                    <p className="text-sm text-gray-600">{analysis.summary}</p>
+                </div>
+
                 <div className="relative group">
                     <div className="flex items-center space-x-1 cursor-help">
                         <p className="text-sm font-medium text-gray-700">Risk Score: {analysis.riskScore}/10</p>
@@ -57,20 +98,27 @@ const AlertDetailsPanel: React.FC<AlertDetailsPanelProps> = ({ alert, analysis, 
                         <div className={`${getScoreColor(analysis.riskScore)} h-2.5 rounded-full transition-all duration-500`} style={{ width: `${analysis.riskScore * 10}%` }}></div>
                     </div>
                     {/* Tooltip */}
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-2 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                         <p className="font-bold text-center">Risk Score Meaning</p>
                         <p><span className="font-semibold text-blue-400">1-3 (Low):</span> Minor policy violation.</p>
                         <p><span className="font-semibold text-orange-400">4-7 (Medium):</span> Suspicious, requires investigation.</p>
                         <p><span className="font-semibold text-red-400">8-10 (Critical):</span> Active threat, immediate action required.</p>
                     </div>
                 </div>
+
                 <div>
-                    <p className="text-sm font-medium text-gray-700">Summary</p>
-                    <p className="text-sm text-gray-600">{analysis.summary}</p>
+                    <p className="text-sm font-medium text-gray-700">Key Factors</p>
+                    <ul className="list-disc list-inside text-sm text-gray-600 space-y-1 mt-1">
+                        {analysis.rationale.map((reason, index) => <li key={index}>{reason}</li>)}
+                    </ul>
                 </div>
+               
                 <div>
-                    <p className="text-sm font-medium text-gray-700">Recommendation</p>
-                    <p className="text-sm text-blue-800 bg-blue-50 p-3 rounded mt-1 font-medium">{analysis.recommendation}</p>
+                    <p className="text-sm font-medium text-gray-700">Suggested Remediation Commands</p>
+                    <div className="mt-2 space-y-2">
+                        <CommandBlock title="PowerShell (Windows)" command={analysis.remediationCommands.powershell} />
+                        <CommandBlock title="Bash (Linux/macOS)" command={analysis.remediationCommands.bash} />
+                    </div>
                 </div>
             </div>
         )}
@@ -93,11 +141,6 @@ const AlertDetailsPanel: React.FC<AlertDetailsPanelProps> = ({ alert, analysis, 
                 <code className="text-xs bg-gray-100 p-2 rounded-md block break-words">{alert.commandLine}</code>
             </DetailRow>
         </dl>
-      </div>
-
-      <div className="mt-8 flex space-x-3">
-          <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Isolate Endpoint</button>
-          <button className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Quarantine File</button>
       </div>
     </div>
   );
